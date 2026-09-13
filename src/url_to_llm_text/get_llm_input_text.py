@@ -113,6 +113,8 @@ async def get_processed_text(page_source: str, base_url: str,
           rowspan_count = 0
           for tr in tbs.find_all('tr')[1:]:
             cells = tr.find_all(['td', 'th'])
+            if not cells:
+              continue
             row_data = []
 
             # Check if first cell is a <th> with rowspan (row header)
@@ -124,12 +126,13 @@ async def get_processed_text(page_source: str, base_url: str,
                 current_row_header = cells[0].get_text(strip=True)
                 cells = cells[1:]
 
-            # Only prepend the row header if needed
-            row_data.append(current_row_header)
+            # Only prepend a row header when the current row has one.
+            if current_row_header is not None:
+              row_data.append(current_row_header)
 
             # Append the rest of the data cells
             row_data.extend(cell.get_text(strip=True) for cell in cells)
-            if ''.join(row_data)!='':
+            if row_data and ''.join(row_data)!='':
               markdown.append('| ' + ' | '.join(row_data) + ' |')
           if markdown != []:
             tbs.replace_with('ttaabbllee ssttaarrtt\n'+caption_text+'\n'+'\n'.join(markdown)+'\nttabbllee eenndd')
